@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "diskdelta"
+version = "0.1.0"
+description = "Snapshot directory sizes and show what grew since the last run and since a week ago."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Jonathan Wrede" }]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+diskdelta = "diskdelta.cli:main"
+
+[tool.ruff]
+line-length = 120
