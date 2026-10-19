@@ -38,6 +38,22 @@ def test_growth_points_at_deepest_directory():
     assert rows == {"/r/a/cache": 500}
 
 
+def test_growth_hides_parent_explained_by_child():
+    # /var/log grew by a log file directly inside it; /var only adds a few KB on top.
+    old = {"/": 1000, "/var": 300, "/var/log": 200, "/var/log/journal": 50}
+    new = {"/": 1000 + 119_000, "/var": 300 + 113_900, "/var/log": 200 + 113_700, "/var/log/journal": 50 + 24_500}
+    rows = dict(growth(new, old))
+    assert "/var" not in rows and "/" not in rows
+    assert rows["/var/log"] == 113_700
+    assert rows["/var/log/journal"] == 24_500
+
+
+def test_growth_keeps_parent_when_children_share_the_change():
+    old = {"/r": 0, "/r/a": 0, "/r/b": 0}
+    new = {"/r": 100, "/r/a": 50, "/r/b": 50}
+    assert dict(growth(new, old)) == {"/r": 100, "/r/a": 50, "/r/b": 50}
+
+
 def test_growth_reports_new_and_shrinking_paths():
     rows = dict(growth({"/r": 50, "/r/new": 70}, {"/r": 100, "/r/gone": 100}))
     assert rows["/r/new"] == 70

@@ -74,19 +74,20 @@ def pick_baseline(snapshots: list[dict], now: float, age_seconds: float) -> dict
     return max(old, key=lambda s: s["time"]) if old else None
 
 
-def growth(new: dict[str, int], old: dict[str, int]) -> list[tuple[str, int]]:
+def growth(new: dict[str, int], old: dict[str, int], share: float = 0.9) -> list[tuple[str, int]]:
     """Size change per path, largest growth first. Paths only in `new` count from zero.
 
-    A path is skipped when its parent is also listed with the same change, so the
-    output points at the deepest directory that explains the growth.
+    A directory is left out when one of its recorded subdirectories accounts for at
+    least `share` of its change, so the output points at the deepest directory that
+    explains the growth.
     """
     deltas = {p: new[p] - old.get(p, 0) for p in new}
     out = []
     for p, d in deltas.items():
         if d == 0:
             continue
-        children = [c for c in deltas if os.path.dirname(c) == p]
-        if any(deltas[c] == d for c in children):
+        children = [c for c in deltas if os.path.dirname(c) == p and c != p]
+        if any(deltas[c] * d > 0 and abs(deltas[c]) >= share * abs(d) for c in children):
             continue
         out.append((p, d))
     return sorted(out, key=lambda x: x[1], reverse=True)
